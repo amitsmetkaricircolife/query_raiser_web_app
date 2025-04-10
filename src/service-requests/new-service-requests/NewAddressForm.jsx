@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { AllService } from "../../service/services";
 import * as Yup from "yup";
 
-const NewAddressForm = ({ onClose, customerData }) => {
+const NewAddressForm = ({ onClose, customerData, onAddressAdded }) => {
   //constants
   //states
   console.log("CUSTOMER DATA", customerData);
@@ -41,6 +41,7 @@ const NewAddressForm = ({ onClose, customerData }) => {
       setLoading(true);
       try {
         await AllService.createNewAddress(customerData?.customer_id, values);
+        onAddressAdded();
         onClose();
       } catch (error) {
         console.error(error);

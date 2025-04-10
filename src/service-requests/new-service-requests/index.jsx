@@ -62,7 +62,7 @@ const NewServiceRequests = () => {
       subject: "AC Not Cooling",
       summery: "",
       status: false,
-      deviceid: "",
+      deviceid: "Other",
       customer_id: "",
       address: "",
       raisedBy: raisedBy,
@@ -138,10 +138,13 @@ const NewServiceRequests = () => {
       );
       setAddresses(customerData.shipping_address);
 
-      setSelectedAddressId(customerData.shipping_address?._id);
       formik.setFieldValue("userName", customerData.name);
       formik.setFieldValue("userPhoneNo", customerData.mobileNumber);
       formik.setFieldValue("billingName", customerData.gstin[0]?.billingName);
+      formik.setFieldValue(
+        "brandName",
+        customerData.gstin[0]?.brandName ?? customerData.gstin[0]?.billingName
+      );
     } else {
       formik.setFieldValue("customer_id", "");
       setAddresses([]);
@@ -154,23 +157,38 @@ const NewServiceRequests = () => {
     setSelectedAddressId(address._id);
     formik.setFieldValue("contactperson", address.contactPerson);
     formik.setFieldValue("contactnumber", address.contactNumber);
+
     const formattedAddress = `${address.line1}, ${address.line2}, ${address.city}, ${address.state}, ${address.pincode}`;
     formik.setFieldValue("address", formattedAddress);
 
-    const devices = await AllService.getDeviceDataFromAddressId(address._id);
-    console.log(devices); // You can store device data in state if needed.
-    //setDeviceList(devices);
-    setDeviceList([
-      {
-        deviceId: "E1:FF:56:R4",
-        name: "Hall AC",
-      },
-    ]);
-    if (devices?.length > 0) {
-      formik.setFieldValue("deviceid", devices[0].deviceId);
-    } else {
+    try {
+      const devices = await AllService.getDeviceDataFromAddressId(address._id);
+
+      setDeviceList(devices || []);
+
+      if (devices?.length > 0) {
+        formik.setFieldValue("deviceid", devices[0].deviceId);
+      } else {
+        formik.setFieldValue("deviceid", "Other");
+      }
+    } catch (error) {
+      console.error("Failed to fetch devices", error);
+      setDeviceList([]);
       formik.setFieldValue("deviceid", "Other");
     }
+  };
+
+  const refreshCustomerData = async () => {
+    if (!selectedCustomer) return;
+
+    const customerData = await AllService.getCustomerData(
+      selectedCustomer.customer_id
+    );
+    setAddresses(customerData.shipping_address || []);
+    setSelectedAddressId(null);
+    setDeviceList([]);
+    formik.setFieldValue("address", "");
+    formik.setFieldValue("deviceid", "Other");
   };
 
   //useEffects
@@ -185,7 +203,7 @@ const NewServiceRequests = () => {
               value={selectedCustomer}
               options={customerOptions}
               getOptionLabel={(option) =>
-                `${option.name} (${option.customer_id})` || ""
+                `${option.name} (${option.customer_id})`
               }
               onInputChange={(e, value) => fetchCustomers(value)}
               onChange={handleCustomerSelect}
@@ -543,11 +561,12 @@ const NewServiceRequests = () => {
         maxWidth="sm"
         open={openAddAddress}
         onClose={handleCloseDialog}
-        title={`Add New Address`}
+        title={"Add New Address"}
       >
         <NewAddressForm
           onClose={handleCloseDialog}
           customerData={selectedCustomer}
+          onAddressAdded={refreshCustomerData}
         />
       </DataViewerDialog>
     </form>
