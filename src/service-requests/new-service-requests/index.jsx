@@ -1,4 +1,5 @@
 import {
+  Radio,
   Box,
   Button,
   FormControl,
@@ -79,28 +80,31 @@ const NewServiceRequests = () => {
     initialValues: {
       contactperson: "",
       contactnumber: "",
-      contactemail: "xyz@gmail.com",
       image: "",
       subject: "AC Not Cooling",
       summery: "",
       status: false,
       deviceid: "Other",
+      deviceName: "",
       customer_id: "",
       address: "",
       raisedBy: raisedBy,
       billingName: "",
       brandName: "",
     },
+    enableReinitializ: true,
     validationSchema: Yup.object({
       customer_id: Yup.string().required("Customer selection is required"),
-      billingName: Yup.string().required("Billing Name is required"),
-      brandName: Yup.string().required("Brand Name is required"),
+      billingName: Yup.string(),
+      brandName: Yup.string(),
+
       contactperson: Yup.string().required("Contact Person is required"),
       contactnumber: Yup.string()
         .required("Contact Number is required")
         .matches(/^[0-9]{10}$/, "Contact Number must be exactly 10 digits"),
       address: Yup.string().required("Address selection is required"),
       deviceid: Yup.string().required("AC selection is required"),
+      deviceName: Yup.string().required("Device name is required"),
       subject: Yup.string().required("Issue selection is required"),
       summery: Yup.string(),
     }),
@@ -132,11 +136,11 @@ const NewServiceRequests = () => {
     }, 300),
     []
   );
-
+  console.log("ERRORSS", formik.errors);
   const uploadImageToS3 = async (file) => {
     setIsUploading(true);
     try {
-      const fileName = `service-requests/${Date.now()}-${file.name}`;
+      const fileName = `query/${Date.now()}-${file.name}`;
       const arrayBuffer = await file.arrayBuffer();
 
       const command = new PutObjectCommand({
@@ -254,26 +258,38 @@ const NewServiceRequests = () => {
 
   const handleAddressSelect = async (address) => {
     setSelectedAddressId(address._id);
-    formik.setFieldValue("contactperson", address.contactPerson);
-    formik.setFieldValue("contactnumber", address.contactNumber);
+    if (address.contactPerson) {
+      formik.setFieldValue("contactperson", address.contactPerson);
+    } else {
+      formik.setFieldValue("contactperson", "");
+    }
+    if (address.contactPerson) {
+      formik.setFieldValue("contactnumber", address.contactNumber);
+    } else {
+      formik.setFieldValue("contactnumber", "");
+    }
 
     const formattedAddress = `${address.line1}, ${address.line2}, ${address.city}, ${address.state}, ${address.pincode}`;
     formik.setFieldValue("address", formattedAddress);
 
     try {
       const devices = await AllService.getDeviceDataFromAddressId(address._id);
-
       setDeviceList(devices || []);
 
       if (devices?.length > 0) {
-        formik.setFieldValue("deviceid", devices[0].deviceId);
+        // Set both deviceId and deviceName when devices are available
+        formik.setFieldValue("deviceid", devices[0].deviceid);
+        formik.setFieldValue("deviceName", devices[0].deviceName);
       } else {
+        // Set default values when no devices are available
         formik.setFieldValue("deviceid", "Other");
+        formik.setFieldValue("deviceName", "Other");
       }
     } catch (error) {
       console.error("Failed to fetch devices", error);
       setDeviceList([]);
       formik.setFieldValue("deviceid", "Other");
+      formik.setFieldValue("deviceName", "Other");
     }
   };
 
@@ -295,7 +311,7 @@ const NewServiceRequests = () => {
   return (
     <form onSubmit={formik.handleSubmit}>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 8 }}>
+        <Grid size={{ xs: 12, sm: 12 }}>
           <Stack>
             <Typography variant="subtitle2">Search User</Typography>
             <Autocomplete
@@ -310,7 +326,12 @@ const NewServiceRequests = () => {
                 <TextField
                   {...params}
                   size="small"
-                  placeholder="Search by Billing Name, Phone Number, Brand Name or Customer ID"
+                  placeholder="Search by Billing Name, Brand Name or Customer ID"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "20px", //
+                    },
+                  }}
                 />
               )}
             />
@@ -327,6 +348,9 @@ const NewServiceRequests = () => {
               <Stack>
                 <Typography variant="subtitle2">Billing Name</Typography>
                 <TextField
+                  InputProps={{
+                    readOnly: true,
+                  }}
                   name="billingName"
                   placeholder="Billing Name"
                   size="small"
@@ -346,6 +370,9 @@ const NewServiceRequests = () => {
               <Stack>
                 <Typography variant="subtitle2">Brand Name</Typography>
                 <TextField
+                  InputProps={{
+                    readOnly: true,
+                  }}
                   name="brandName"
                   placeholder="Brand Name"
                   size="small"
@@ -426,7 +453,7 @@ const NewServiceRequests = () => {
                 Add new address
               </Button>
             </Grid>
-            <Grid item size={12}>
+            {/* <Grid item size={12}>
               <Grid container spacing={2}>
                 {addresses.map((address) => (
                   <Grid size={{ xs: 12, sm: 4 }} key={address._id}>
@@ -450,6 +477,51 @@ const NewServiceRequests = () => {
                         {address.line1}, {address.line2}, {address.city},{" "}
                         {address.state}, {address.pincode}
                       </Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid> */}
+            <Grid item size={12}>
+              <Grid container spacing={2}>
+                {addresses.map((address) => (
+                  <Grid size={{ xs: 12, sm: 4 }} key={address._id}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 1,
+                      }}
+                    >
+                      <Radio
+                        checked={selectedAddressId === address._id}
+                        onChange={() => handleAddressSelect(address)}
+                        value={address._id}
+                        name="address-radio"
+                        inputProps={{ "aria-label": address._id }}
+                      />
+                      <Box
+                        sx={{
+                          border:
+                            selectedAddressId === address._id
+                              ? "2px solid #1976d2"
+                              : "1px solid #ccc",
+                          borderRadius: 2,
+                          p: 2,
+                          cursor: "pointer",
+                          backgroundColor:
+                            selectedAddressId === address._id
+                              ? "#e3f2fd"
+                              : "white",
+                          flex: 1,
+                        }}
+                        onClick={() => handleAddressSelect(address)}
+                      >
+                        <Typography>
+                          {address.line1}, {address.line2}, {address.city},{" "}
+                          {address.state}, {address.pincode}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Grid>
                 ))}
@@ -504,14 +576,23 @@ const NewServiceRequests = () => {
                   <Select
                     name="deviceid"
                     value={formik.values.deviceid}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      const selectedDevice = deviceList.find(
+                        (device) => device.deviceid === e.target.value
+                      );
+                      formik.setFieldValue("deviceid", e.target.value);
+                      formik.setFieldValue(
+                        "deviceName",
+                        selectedDevice ? selectedDevice.deviceName : "Other"
+                      );
+                    }}
                     size="small"
                     error={
                       formik.touched.deviceid && Boolean(formik.errors.deviceid)
                     }
                   >
                     {deviceList?.map((data, index) => (
-                      <MenuItem key={index} value={data.deviceId}>
+                      <MenuItem key={index} value={data.deviceid}>
                         {data.deviceName}
                       </MenuItem>
                     ))}

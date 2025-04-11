@@ -10,11 +10,14 @@ import {
   useTheme,
   Chip,
   Divider,
+  Link,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 
 import DataViewerDialog from "../../components/DataViewerDialog";
+import NoDataFound from "../../components/NoDataFound";
 
 const PastRequestAccordion = memo(function PastRequestAccordion({
   device,
@@ -27,9 +30,11 @@ const PastRequestAccordion = memo(function PastRequestAccordion({
   contactNumber,
   expanded,
   onChange,
+  image,
 }) {
   //constants
   const theme = useTheme();
+  console.log("THIS IS IMAGE", image);
 
   //states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,9 +73,7 @@ const PastRequestAccordion = memo(function PastRequestAccordion({
             >
               Device:
             </Typography>
-            <Typography variant="subtitle2">
-              {device != "" ? device : "-"}
-            </Typography>
+            <Typography variant="subtitle2">{device ?? "--"}</Typography>
           </Stack>
 
           <IconButton size="small">
@@ -100,7 +103,13 @@ const PastRequestAccordion = memo(function PastRequestAccordion({
             </Typography>
             <Chip
               label={status}
-              color="warning"
+              color={
+                status == "Open"
+                  ? "error"
+                  : status == "Pending"
+                  ? "warning"
+                  : "success"
+              }
               size="small"
               variant="outlined"
             />
@@ -131,10 +140,28 @@ const PastRequestAccordion = memo(function PastRequestAccordion({
               >
                 Description:
               </Typography>
-              <Typography variant="subtitle2">
-                {description != "" ? description : "-"}
-              </Typography>
+              <Typography variant="subtitle2">{description ?? "--"}</Typography>
             </Stack>
+            {image ? (
+              <Link
+                component="button"
+                variant="body2"
+                onClick={handleOpenDialog}
+                sx={{
+                  color: theme.palette.primary.main,
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  mt: 0.5,
+                  display: "inline-block",
+                }}
+              >
+                <Stack direction="row" alignItems="center">
+                  {" "}
+                  <AttachFileIcon fontSize="small" />
+                  View Attachment
+                </Stack>
+              </Link>
+            ) : null}
           </Box>
           <Box sx={{ mt: 1 }}>
             <Stack direction="row" spacing={1}>
@@ -180,23 +207,20 @@ const PastRequestAccordion = memo(function PastRequestAccordion({
               </Typography>
             </Stack>
           </Stack>
-
-          <Button
-            color="primary"
-            variant="outlined"
-            size="small"
-            onClick={handleOpenDialog}
-            sx={{ mt: 1 }}
-          >
-            View Attachments
-          </Button>
         </Collapse>
       </Paper>
       <DataViewerDialog
+        maxWidth="md"
         open={dialogOpen}
         onClose={handleCloseDialog}
-        title={`Supporting Images for ${device}`}
-      ></DataViewerDialog>
+        title={`Supporting Images for ${device ?? "Other"}`}
+      >
+        {image ? (
+          <img src={image} alt="Image" width="100%vw" height="500px" />
+        ) : (
+          <NoDataFound />
+        )}
+      </DataViewerDialog>
     </>
   );
 });

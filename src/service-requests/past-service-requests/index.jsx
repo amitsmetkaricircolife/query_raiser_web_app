@@ -55,7 +55,8 @@ const PastServiceRequests = () => {
       {queryList.map((item, index) => (
         <PastRequestAccordion
           key={index}
-          device={item.device}
+          device={item.deviceName}
+          image={item.image}
           postedDate={new Date(item.TimeStamp).toLocaleDateString()}
           status={item.queryStatus}
           issue={item.subject}
