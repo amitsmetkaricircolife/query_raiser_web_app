@@ -20,7 +20,7 @@ const NewAddressForm = ({ onClose, customerData, onAddressAdded }) => {
   const theme = useTheme();
   const isXsScreen = useMediaQuery(theme.breakpoints.down("sm"));
   //states
-  console.log("CUSTOMER DATA", customerData);
+
   const [loading, setLoading] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const formik = useFormik({
@@ -61,6 +61,7 @@ const NewAddressForm = ({ onClose, customerData, onAddressAdded }) => {
     },
   });
 
+  //methods
   const fetchPincodeDetails = useCallback(
     debounce(async (pincode) => {
       if (pincode.length === 6) {
@@ -98,6 +99,8 @@ const NewAddressForm = ({ onClose, customerData, onAddressAdded }) => {
       formik.setFieldValue("city", "");
     }
   };
+
+  //useEffects
 
   useEffect(() => {
     return () => {

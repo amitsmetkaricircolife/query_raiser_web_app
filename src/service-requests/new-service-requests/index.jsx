@@ -73,7 +73,6 @@ const NewServiceRequests = () => {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [deviceList, setDeviceList] = useState([]);
   const [openAddAddress, setOpenAddAddress] = useState(false);
-  // Form validation schema
 
   // Formik initialization
   const formik = useFormik({
@@ -136,7 +135,7 @@ const NewServiceRequests = () => {
     }, 300),
     []
   );
-  console.log("ERRORSS", formik.errors);
+
   const uploadImageToS3 = async (file) => {
     setIsUploading(true);
     try {
@@ -152,7 +151,6 @@ const NewServiceRequests = () => {
 
       await s3Client.send(command);
 
-      // Generate a presigned URL for the uploaded image
       const getCommand = new GetObjectCommand({
         Bucket: import.meta.env.VITE_APP_AWS_BUCKET_NAME,
         Key: fileName,

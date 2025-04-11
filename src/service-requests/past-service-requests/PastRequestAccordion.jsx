@@ -2,7 +2,6 @@ import { useState, memo } from "react";
 import {
   Paper,
   Collapse,
-  Button,
   Typography,
   Box,
   IconButton,
@@ -34,7 +33,7 @@ const PastRequestAccordion = memo(function PastRequestAccordion({
 }) {
   //constants
   const theme = useTheme();
-  console.log("THIS IS IMAGE", image);
+  
 
   //states
   const [dialogOpen, setDialogOpen] = useState(false);

@@ -35,6 +35,7 @@ const PastServiceRequests = () => {
     }
   };
 
+  //useEffects
   useEffect(() => {
     fetchQueryData();
   }, []);
