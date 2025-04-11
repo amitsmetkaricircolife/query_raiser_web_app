@@ -23,6 +23,20 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import DataViewerDialog from "../../components/DataViewerDialog";
 import NewAddressForm from "./NewAddressForm";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const s3Client = new S3Client({
+  region: "ap-south-1",
+  credentials: {
+    accessKeyId: import.meta.env.VITE_APP_S3_ACCESS_KEY,
+    secretAccessKey: import.meta.env.VITE_APP_S3_SECERET_KEY,
+  },
+});
 
 const NewServiceRequests = () => {
   //constants
@@ -43,6 +57,10 @@ const NewServiceRequests = () => {
     { name: "Others" },
   ];
   //states
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
   const [open, setOpen] = React.useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerOptions, setCustomerOptions] = useState([]);
@@ -111,7 +129,84 @@ const NewServiceRequests = () => {
     []
   );
 
+  const uploadImageToS3 = async (file) => {
+    setIsUploading(true);
+    try {
+      const fileName = `service-requests/${Date.now()}-${file.name}`;
+      const arrayBuffer = await file.arrayBuffer();
+
+      const command = new PutObjectCommand({
+        Bucket: import.meta.env.VITE_APP_AWS_BUCKET_NAME,
+        Key: fileName,
+        Body: arrayBuffer,
+        ContentType: file.type,
+      });
+
+      await s3Client.send(command);
+
+      // Generate a presigned URL for the uploaded image
+      const getCommand = new GetObjectCommand({
+        Bucket: import.meta.env.VITE_APP_AWS_BUCKET_NAME,
+        Key: fileName,
+      });
+
+      const imageUrl = await getSignedUrl(s3Client, getCommand, {
+        expiresIn: 604800,
+      }); // 1 week expiry
+
+      formik.setFieldValue("image", imageUrl);
+      return imageUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.match("image.*")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+      // 15MB limit
+      alert("Image size should be less than 15MB");
+      return;
+    }
+
+    setImageFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImagePreview(event.target.result);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to S3
+    try {
+      await uploadImageToS3(file);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setImageFile(null);
+      setImagePreview("");
+    }
+  };
+
   //methods
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    formik.setFieldValue("image", "");
+  };
+
   const handleOpenDialog = () => {
     setOpenAddAddress(true);
   };
@@ -466,44 +561,46 @@ const NewServiceRequests = () => {
                 />
               </Stack>
             </Grid>
-            {/* <Grid size={12}>
+            <Grid size={12}>
               <Typography variant="h6" color="primary" fontWeight="bold">
-                Upload Images
+                Upload Image
               </Typography>
-            </Grid> */}
-            {/* <Grid size={12}>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            accept="image/*"
-            multiple
-            style={{ display: "none" }}
-          />
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<AddPhotoAlternateIcon />}
-            onClick={triggerFileInput}
-            sx={{ mb: 2 }}
-          >
-            Upload Images
-          </Button>
+            </Grid>
+            <Grid size={12}>
+              <input
+                type="file"
+                id="service-request-image"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+                disabled={isUploading}
+              />
+              <label htmlFor="service-request-image">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<AddOutlinedIcon />}
+                  disabled={isUploading}
+                  sx={{ mb: 2 }}
+                >
+                  {isUploading ? "Uploading..." : "Upload Image"}
+                </Button>
+              </label>
 
-          <Grid container spacing={2}>
-            {images.map((image) => (
-              <Grid key={image.id} size={4}>
+              {imagePreview && (
                 <Box
                   sx={{
                     position: "relative",
+                    width: 150,
+                    height: 150,
                     border: "1px solid #ddd",
                     borderRadius: 1,
                     overflow: "hidden",
-                    height: 150,
+                    mt: 1,
                   }}
                 >
                   <img
-                    src={image.preview}
+                    src={imagePreview}
                     alt="Preview"
                     style={{
                       width: "100%",
@@ -512,7 +609,7 @@ const NewServiceRequests = () => {
                     }}
                   />
                   <IconButton
-                    onClick={() => handleDeleteImage(image.id)}
+                    onClick={handleRemoveImage}
                     size="small"
                     sx={{
                       position: "absolute",
@@ -524,13 +621,11 @@ const NewServiceRequests = () => {
                       },
                     }}
                   >
-                    <DeleteIcon color="error" />
+                    <CloseIcon color="error" />
                   </IconButton>
                 </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </Grid> */}
+              )}
+            </Grid>
             <Grid size={12}>
               <Divider />
             </Grid>
