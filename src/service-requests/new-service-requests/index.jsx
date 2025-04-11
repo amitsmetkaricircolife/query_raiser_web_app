@@ -721,7 +721,7 @@ const NewServiceRequests = () => {
                 variant="contained"
                 color="secondary"
                 type="submit"
-                disabled={formik.isSubmitting}
+                disabled={formik.isSubmitting || isUploading}
                 fullWidth={isXsScreen}
                 sx={{
                   ...(!isXsScreen && {

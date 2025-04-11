@@ -50,9 +50,10 @@ const PastServiceRequests = () => {
   if (queryList.length === 0) {
     return <NoDataFound />;
   }
+  const reversedQueryList = [...queryList]?.reverse();
   return (
     <>
-      {queryList.map((item, index) => (
+      {reversedQueryList?.map((item, index) => (
         <PastRequestAccordion
           key={index}
           device={item.deviceName}

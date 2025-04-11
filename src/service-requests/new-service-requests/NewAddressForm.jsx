@@ -1,5 +1,13 @@
 import { LoadingButton } from "@mui/lab";
-import { Divider, Grid, Stack, TextField, Typography } from "@mui/material";
+import {
+  Divider,
+  Grid,
+  Stack,
+  TextField,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import axios from "axios";
 import { useFormik } from "formik";
 import { debounce } from "lodash";
@@ -9,6 +17,8 @@ import * as Yup from "yup";
 
 const NewAddressForm = ({ onClose, customerData, onAddressAdded }) => {
   //constants
+  const theme = useTheme();
+  const isXsScreen = useMediaQuery(theme.breakpoints.down("sm"));
   //states
   console.log("CUSTOMER DATA", customerData);
   const [loading, setLoading] = useState(false);
@@ -231,6 +241,12 @@ const NewAddressForm = ({ onClose, customerData, onAddressAdded }) => {
               type="submit"
               variant="contained"
               color="secondary"
+              fullWidth={isXsScreen}
+              sx={{
+                ...(!isXsScreen && {
+                  minWidth: "180px",
+                }),
+              }}
             >
               Submit
             </LoadingButton>

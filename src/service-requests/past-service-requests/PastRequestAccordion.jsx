@@ -89,7 +89,9 @@ const PastRequestAccordion = memo(function PastRequestAccordion({
               Posted On:
             </Typography>
             <Typography variant="subtitle2">
-              {postedDate != "" ? postedDate : "-"}
+              {postedDate != ""
+                ? new Date(postedDate).toLocaleDateString("en-GB")
+                : "-"}
             </Typography>
           </Stack>
         </Box>
