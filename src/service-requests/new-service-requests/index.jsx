@@ -13,6 +13,8 @@ import {
   Autocomplete,
   Snackbar,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import React, { useState, useCallback } from "react";
 import { useFormik } from "formik";
@@ -41,6 +43,8 @@ const s3Client = new S3Client({
 const NewServiceRequests = () => {
   //constants
   const raisedBy = "GlTwSxksjHdPw0m1gDtWthVFwoj1";
+  const theme = useTheme();
+  const isXsScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const acIssues = [
     { name: "AC Not Cooling" },
@@ -291,7 +295,7 @@ const NewServiceRequests = () => {
   return (
     <form onSubmit={formik.handleSubmit}>
       <Grid container spacing={2}>
-        <Grid size={8}>
+        <Grid size={{ xs: 12, sm: 8 }}>
           <Stack>
             <Typography variant="subtitle2">Search User</Typography>
             <Autocomplete
@@ -319,7 +323,7 @@ const NewServiceRequests = () => {
                 Billing Information
               </Typography>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
                 <Typography variant="subtitle2">Billing Name</Typography>
                 <TextField
@@ -338,7 +342,7 @@ const NewServiceRequests = () => {
                 />
               </Stack>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
                 <Typography variant="subtitle2">Brand Name</Typography>
                 <TextField
@@ -361,7 +365,7 @@ const NewServiceRequests = () => {
                 User Information
               </Typography>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
                 <Typography variant="subtitle2">User Name</Typography>
                 <TextField
@@ -380,7 +384,7 @@ const NewServiceRequests = () => {
                 />
               </Stack>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
                 <Typography variant="subtitle2">User Phone No.</Typography>
                 <TextField
@@ -412,8 +416,9 @@ const NewServiceRequests = () => {
                 </Typography>
               )}
             </Grid>
-            <Grid size={12} sx={{ mt: 2 }}>
+            <Grid size={12}>
               <Button
+                color="secondary"
                 variant="outlined"
                 onClick={handleOpenDialog}
                 startIcon={<AddOutlinedIcon />}
@@ -421,10 +426,10 @@ const NewServiceRequests = () => {
                 Add new address
               </Button>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item size={12}>
               <Grid container spacing={2}>
                 {addresses.map((address) => (
-                  <Grid size={4} key={address._id}>
+                  <Grid size={{ xs: 12, sm: 4 }} key={address._id}>
                     <Box
                       sx={{
                         border:
@@ -441,7 +446,7 @@ const NewServiceRequests = () => {
                       }}
                       onClick={() => handleAddressSelect(address)}
                     >
-                      <Typography variant="caption">
+                      <Typography>
                         {address.line1}, {address.line2}, {address.city},{" "}
                         {address.state}, {address.pincode}
                       </Typography>
@@ -452,7 +457,7 @@ const NewServiceRequests = () => {
             </Grid>
 
             <Grid size={12}></Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
                 <Typography variant="subtitle2">Contact Person</Typography>
                 <TextField
@@ -471,7 +476,7 @@ const NewServiceRequests = () => {
                 />
               </Stack>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
                 <Typography variant="subtitle2">Contact Number</Typography>
                 <TextField
@@ -490,9 +495,11 @@ const NewServiceRequests = () => {
                 />
               </Stack>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
-                <Typography variant="subtitle2">Select AC</Typography>
+                <Typography variant="subtitle2">
+                  Select AC (Optional)
+                </Typography>
                 <FormControl fullWidth>
                   <Select
                     name="deviceid"
@@ -505,7 +512,7 @@ const NewServiceRequests = () => {
                   >
                     {deviceList?.map((data, index) => (
                       <MenuItem key={index} value={data.deviceId}>
-                        {data.name}
+                        {data.deviceName}
                       </MenuItem>
                     ))}
                     <MenuItem value="Other">Other</MenuItem>
@@ -518,7 +525,7 @@ const NewServiceRequests = () => {
                 )}
               </Stack>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Stack>
                 <Typography variant="subtitle2">Select Issue</Typography>
                 <FormControl fullWidth>
@@ -545,7 +552,9 @@ const NewServiceRequests = () => {
             </Grid>
             <Grid size={12}>
               <Stack>
-                <Typography variant="subtitle2">Description</Typography>
+                <Typography variant="subtitle2">
+                  Description of Issue (Optional)
+                </Typography>
                 <TextField
                   name="summery"
                   placeholder="Description"
@@ -561,11 +570,7 @@ const NewServiceRequests = () => {
                 />
               </Stack>
             </Grid>
-            <Grid size={12}>
-              <Typography variant="h6" color="primary" fontWeight="bold">
-                Upload Image
-              </Typography>
-            </Grid>
+
             <Grid size={12}>
               <input
                 type="file"
@@ -578,12 +583,13 @@ const NewServiceRequests = () => {
               <label htmlFor="service-request-image">
                 <Button
                   variant="outlined"
+                  color="secondary"
                   component="span"
                   startIcon={<AddOutlinedIcon />}
                   disabled={isUploading}
                   sx={{ mb: 2 }}
                 >
-                  {isUploading ? "Uploading..." : "Upload Image"}
+                  {isUploading ? "Uploading..." : "Upload a file"}
                 </Button>
               </label>
 
@@ -635,6 +641,12 @@ const NewServiceRequests = () => {
                 color="secondary"
                 type="submit"
                 disabled={formik.isSubmitting}
+                fullWidth={isXsScreen}
+                sx={{
+                  ...(!isXsScreen && {
+                    minWidth: "180px",
+                  }),
+                }}
               >
                 {formik.isSubmitting ? "Submitting..." : "Submit"}
               </Button>

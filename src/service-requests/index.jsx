@@ -22,7 +22,7 @@ const ServiceRequests = () => {
               textColor="secondary"
               indicatorColor="secondary"
             >
-              <Tab label="New Service Request" value={1} />
+              <Tab label="Register Breakdown Query" value={1} />
               <Tab label="Past Service Requests" value={2} />
             </TabList>
           </Box>

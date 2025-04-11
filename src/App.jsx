@@ -6,10 +6,10 @@ function App() {
   return (
     <>
       <Grid container>
-        <Grid size={2}>
+        <Grid size={{ xs: 12, sm: 2 }}>
           <img src={logo} alt="Company Logo" width={150} />
         </Grid>
-        <Grid size={10}>
+        <Grid size={{ xs: 12, sm: 10 }}>
           <Card variant="outlined" sx={{ padding: 2 }}>
             <ServiceRequests />
           </Card>
